@@ -1,5 +1,5 @@
 #define VerM 0
-#define Verm 03
+#define Verm 04
 
 unsigned long PERIOD = 1L;  // 3 min send once
 
@@ -37,7 +37,7 @@ SFE_BMP180 pr;
 unsigned long oldtime = 10000L;
 double getPressure();
 double baseline;
-
+int checkSum=0;
 void setup() {
   char buf[40];
   int i;
@@ -99,14 +99,18 @@ void setup() {
 }
 
 unsigned int counter=0;
+unsigned long lastSend = millis();
+const long minute = 60000;
+
 void loop() {
   // put your main code here, to run repeatedly:
-  if ((millis() -oldtime) > (PERIOD *1000 * 60L) || (millis() < oldtime)) {
+  if ((millis() -oldtime) > (PERIOD *minute) || (millis() < oldtime)) {
     
 //    Serial.print(oldtime);
 //    Serial.print(" / ");
 //    Serial.println(counter);
 //    counter=0;
+    oldtime = millis();
     for (int xxx = 0; xxx < 3; xxx++) {
 
       digitalWrite(12, HIGH);
@@ -119,6 +123,8 @@ void loop() {
     errorCode = myDHT22.readData();
     double a, P, P0;
     double T180;
+    double t;
+    double h;
     char prStatus;
     myGLCD.clrScr();
     //  myGLCD.drawBitmap(0, 0, dino, 84, 48);
@@ -129,6 +135,8 @@ void loop() {
     myGLCD.clrScr();
     char buf[128];
     char buf2[140];
+    t=myDHT22.getTemperatureC();
+    h=myDHT22.getHumidity();
     sprintf(buf, "Temp %hi.%01hi C",
             myDHT22.getTemperatureCInt() / 10, abs(myDHT22.getTemperatureCInt() % 10));
     //Serial.print (buf);
@@ -137,11 +145,11 @@ void loop() {
     sprintf(buf, "RH  %i.%01i %%",
             myDHT22.getHumidityInt() / 10, myDHT22.getHumidityInt() % 10);
     //Serial.println (buf);
-    myGLCD.print(buf, 0, 10);
+    //myGLCD.print(buf, 0, 10);
     //  sprintf(buf, "Code %d ", errorCode);
     //
     //
-    //  myGLCD.print(buf, CENTER, 40);
+      myGLCD.print(buf, CENTER, 40);
     prStatus = pr.startTemperature();
     if (prStatus != 0) {
       delay(prStatus);
@@ -171,15 +179,25 @@ void loop() {
 
     myGLCD.print(buf, 0, 40);
     digitalWrite(12, HIGH);
-    sprintf(buf2, "#%2d.%1d %2d.%1d %04d.%1d %2d.%1d %04d.%1d",
+    checkSum = int(t)+int(h)+int(T180)+int(P)+int(a);
+    sprintf(buf2, "#%2d.%1d %2d.%1d %4d.%1d %2d.%1d %2d.%1d %d",
             myDHT22.getTemperatureCInt() / 10, abs(myDHT22.getTemperatureCInt() % 10),
             myDHT22.getHumidityInt() / 10, myDHT22.getHumidityInt() % 10,
             int(P), (int(P * 10) % 10),
             int(T180), abs(int (T180 * 10) % 10),
-            int(a), abs(int(a * 10) % 10)
+            int(a), abs(int(a * 10) % 10),
+            checkSum
+           );
+    sprintf(buf2, "#%2d.%1d,%2d.%1d,%4d.%1d,%2d.%1d,%2d.%1d,%d",
+            myDHT22.getTemperatureCInt() / 10, abs(myDHT22.getTemperatureCInt() % 10),
+            myDHT22.getHumidityInt() / 10, myDHT22.getHumidityInt() % 10,
+            int(P), (int(P * 10) % 10),
+            int(T180), abs(int (T180 * 10) % 10),
+            int(a), abs(int(a * 10) % 10),
+            checkSum
            );
 
-    //myGLCD.print(buf2,0,20);
+    Serial.println(buf2);
     delay(100);
     digitalWrite(12, LOW);
 
