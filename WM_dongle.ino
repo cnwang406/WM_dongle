@@ -1,5 +1,5 @@
 #define VerM 0
-#define Verm 04
+#define Verm 05
 
 unsigned long PERIOD = 1L;  // 3 min send once
 
@@ -61,7 +61,7 @@ void setup() {
   Serial.begin(9600);
   pinMode(0, OUTPUT);
 
-  BT.begin(115200);
+  BT.begin(9600);
   myGLCD.print("WeatherMonitor", CENTER, 0);
   myGLCD.print("Outdoor", CENTER, 12);
   myGLCD.print("by cnwang 2016", CENTER, 30);
@@ -95,7 +95,7 @@ void setup() {
   pinMode(12, OUTPUT);
 
   //oldtime = millis();
-  Serial.begin(115200);
+  Serial.begin(9600);
 }
 
 unsigned int counter=0;
@@ -262,13 +262,13 @@ double getPressure()
         {
           return (P);
         }
-        else Serial.println("error retrieving pressure measurement\n");
+        else Serial.println("");
       }
-      else Serial.println("error starting pressure measurement\n");
+      else Serial.println("");
     }
-    else Serial.println("error retrieving temperature measurement\n");
+    else Serial.println("");
   }
-  else Serial.println("error starting temperature measurement\n");
+  else Serial.println("");
 }
 
 
