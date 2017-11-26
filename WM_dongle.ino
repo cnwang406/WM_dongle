@@ -1,5 +1,6 @@
 #define VerM 0
-#define Verm 05
+#define Verm 06
+
 
 unsigned long PERIOD = 1L;  // 3 min send once
 
@@ -27,7 +28,7 @@ SFE_BMP180 pr;
 #define ALTITUDE 55.0 // Altitude of SparkFun's HQ in Boulder, CO. in meters
 
 
-
+bool bOBTEnable = true;
 
 
 
@@ -80,14 +81,16 @@ void setup() {
     myGLCD.print("SUCCESS", CENTER, 15);
     baseline = pr.startTemperature();
     baseline = getPressure();
-
+    bOBTEnable = true;
   } else
   {
     // Oops, something went wrong, this is usually a connection problem,
     // see the comments at the top of this sketch for the proper connections.
 
 
-    myGLCD.print("FAIL", CENTER, 15);
+    myGLCD.print("FAIL", CENTER, 10);
+    myGLCD.print("Disable BMP180",CENTER, 20);
+    bOBTEnable = false;
 
   }
 
@@ -144,12 +147,10 @@ void loop() {
     myGLCD.print(buf, 0, 0);
     sprintf(buf, "RH  %i.%01i %%",
             myDHT22.getHumidityInt() / 10, myDHT22.getHumidityInt() % 10);
-    //Serial.println (buf);
-    //myGLCD.print(buf, 0, 10);
-    //  sprintf(buf, "Code %d ", errorCode);
-    //
-    //
-      myGLCD.print(buf, CENTER, 40);
+    
+    myGLCD.print(buf, 0, 10);
+
+    
     prStatus = pr.startTemperature();
     if (prStatus != 0) {
       delay(prStatus);
@@ -168,19 +169,23 @@ void loop() {
     P0 = pr.sealevel(P, ALTITUDE);
 
     a = pr.altitude(P, P0);
-    sprintf(buf, "P0 = %d.%d mb", int(P), (int(P * 10) % 10));
-    myGLCD.print(buf, 0, 20);
-    //if(T180>=0) {
-    sprintf(buf, "T= %d.%1d C", int(T180), abs(int (T180 * 10) % 10));
-    //  //}
-    myGLCD.print(buf, 00, 30);
 
-    sprintf(buf, "a= %d.%1d m", int(a), abs(int(a * 10) % 10));
+    if (bOBTEnable) {
+    
+      sprintf(buf, "P0 = %d.%d mb", int(P), (int(P * 10) % 10));
+      myGLCD.print(buf, 0, 20);
+      //if(T180>=0) {
+      sprintf(buf, "T= %d.%1d C", int(T180), abs(int (T180 * 10) % 10));
+      //  //}
+      myGLCD.print(buf, 00, 30);
 
-    myGLCD.print(buf, 0, 40);
-    digitalWrite(12, HIGH);
-    checkSum = int(t)+int(h)+int(T180)+int(P)+int(a);
-    sprintf(buf2, "#%2d.%1d %2d.%1d %4d.%1d %2d.%1d %2d.%1d %d",
+      sprintf(buf, "a= %d.%1d m", int(a), abs(int(a * 10) % 10));
+
+      myGLCD.print(buf, 0, 40);
+     
+      digitalWrite(12, HIGH);
+      checkSum = int(t)+int(h)+int(T180)+int(P)+int(a);
+      sprintf(buf2, "#%2d.%1d %2d.%1d %4d.%1d %2d.%1d %2d.%1d %d",
             myDHT22.getTemperatureCInt() / 10, abs(myDHT22.getTemperatureCInt() % 10),
             myDHT22.getHumidityInt() / 10, myDHT22.getHumidityInt() % 10,
             int(P), (int(P * 10) % 10),
@@ -188,15 +193,17 @@ void loop() {
             int(a), abs(int(a * 10) % 10),
             checkSum
            );
-    sprintf(buf2, "#%2d.%1d,%2d.%1d,%4d.%1d,%2d.%1d,%2d.%1d,%d",
+    } else {
+      checkSum = int(t)+int(h);
+    
+      
+      sprintf(buf2, "#%2d.%1d,%2d.%1d,%d",
             myDHT22.getTemperatureCInt() / 10, abs(myDHT22.getTemperatureCInt() % 10),
             myDHT22.getHumidityInt() / 10, myDHT22.getHumidityInt() % 10,
-            int(P), (int(P * 10) % 10),
-            int(T180), abs(int (T180 * 10) % 10),
-            int(a), abs(int(a * 10) % 10),
+            
             checkSum
            );
-
+    }
     Serial.println(buf2);
     delay(100);
     digitalWrite(12, LOW);
